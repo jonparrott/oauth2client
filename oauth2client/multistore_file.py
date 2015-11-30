@@ -44,6 +44,7 @@ The format of the stored data is like so::
 
 """
 
+import contextlib
 import errno
 import json
 import logging
@@ -54,7 +55,7 @@ from oauth2client.client import Credentials
 from oauth2client.client import Storage as BaseStorage
 from oauth2client import util
 from oauth2client.locked_file import LockedFile
-
+from oauth2client.locked_storage import LockedStorage
 
 __author__ = 'jbeda@google.com (Joe Beda)'
 
@@ -217,22 +218,7 @@ class _MultiStore(object):
             self._multistore = multistore
             self._key = key
 
-        def acquire_lock(self):
-            """Acquires any lock necessary to access this Storage.
-
-            This lock is not reentrant.
-            """
-            self._multistore._lock()
-
-        def release_lock(self):
-            """Release the Storage lock.
-
-            Trying to release a lock that isn't held will result in a
-            RuntimeError.
-            """
-            self._multistore._unlock()
-
-        def locked_get(self):
+        def get(self):
             """Retrieve credential.
 
             The Storage lock must be held when this is called.
@@ -245,7 +231,7 @@ class _MultiStore(object):
                 credential.set_store(self)
             return credential
 
-        def locked_put(self, credentials):
+        def put(self, credentials):
             """Write a credential.
 
             The Storage lock must be held when this is called.
@@ -255,7 +241,7 @@ class _MultiStore(object):
             """
             self._multistore._update_credential(self._key, credentials)
 
-        def locked_delete(self):
+        def delete(self):
             """Delete a credential.
 
             The Storage lock must be held when this is called.
@@ -319,6 +305,13 @@ class _MultiStore(object):
         """Release the lock on the multistore."""
         self._file.unlock_and_close()
         self._thread_lock.release()
+
+    def __enter__(self):
+        self._lock()
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self._unlock()
 
     def _locked_json_read(self):
         """Get the raw content of the multistore file.
@@ -481,4 +474,7 @@ class _MultiStore(object):
         Returns:
             A Storage object that can be used to get/set this cred
         """
-        return self._Storage(self, key)
+
+        return LockedStorage(
+            storage=self._Storage(self, key),
+            lock=self)

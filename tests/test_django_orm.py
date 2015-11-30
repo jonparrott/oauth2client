@@ -42,7 +42,7 @@ from oauth2client.client import Flow
 from oauth2client.client import OAuth2Credentials
 from oauth2client.django_orm import CredentialsField
 from oauth2client.django_orm import FlowField
-from oauth2client.django_orm import Storage
+from oauth2client.django_orm import DjangoOrmStorage
 from oauth2client import GOOGLE_TOKEN_URI
 
 __author__ = 'conleyo@google.com (Conley Owens)'
@@ -119,7 +119,7 @@ class TestFlowField(unittest.TestCase):
         self.assertEqual(value_str, None)
 
 
-class TestStorage(unittest.TestCase):
+class TestDjangoOrmStorage(unittest.TestCase):
 
     def setUp(self):
         access_token = 'foo'
@@ -137,7 +137,7 @@ class TestStorage(unittest.TestCase):
         key_name = 'foo'
         key_value = 'bar'
         property_name = 'credentials'
-        storage = Storage(FakeCredentialsModel, key_name,
+        storage = DjangoOrmStorage(FakeCredentialsModel, key_name,
                           key_value, property_name)
 
         self.assertEqual(storage.model_class, FakeCredentialsModel)

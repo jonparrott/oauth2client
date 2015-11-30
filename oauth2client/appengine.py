@@ -464,7 +464,7 @@ class StorageByKeyName(Storage):
             db.delete(entity_key)
 
     @db.non_transactional(allow_existing=True)
-    def locked_get(self):
+    def get(self):
         """Retrieve Credential from datastore.
 
         Returns:
@@ -487,7 +487,7 @@ class StorageByKeyName(Storage):
         return credentials
 
     @db.non_transactional(allow_existing=True)
-    def locked_put(self, credentials):
+    def put(self, credentials):
         """Write a Credentials to the datastore.
 
         Args:
@@ -500,7 +500,7 @@ class StorageByKeyName(Storage):
             self._cache.set(self._key_name, credentials.to_json())
 
     @db.non_transactional(allow_existing=True)
-    def locked_delete(self):
+    def delete(self):
         """Delete Credential from datastore."""
 
         if self._cache:

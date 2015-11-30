@@ -32,7 +32,7 @@ from oauth2client.client import verify_id_token
 from oauth2client.client import HAS_OPENSSL
 from oauth2client.client import HAS_CRYPTO
 from oauth2client import crypt
-from oauth2client.file import Storage
+from oauth2client.file_storage import FileStorage as Storage
 
 
 __author__ = 'jcgregorio@google.com (Joe Gregorio)'

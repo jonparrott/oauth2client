@@ -31,7 +31,7 @@ import unittest
 from .http_mock import HttpMockSequence
 import six
 
-from oauth2client import file
+from oauth2client import file_storage
 from oauth2client import locked_file
 from oauth2client import multistore_file
 from oauth2client import util
@@ -79,7 +79,7 @@ class OAuth2ClientFileTests(unittest.TestCase):
         return credentials
 
     def test_non_existent_file_storage(self):
-        s = file.Storage(FILENAME)
+        s = file_storage.FileStorage(FILENAME)
         credentials = s.get()
         self.assertEquals(None, credentials)
 
@@ -87,11 +87,11 @@ class OAuth2ClientFileTests(unittest.TestCase):
         if hasattr(os, 'symlink'):
             SYMFILENAME = FILENAME + '.sym'
             os.symlink(FILENAME, SYMFILENAME)
-            s = file.Storage(SYMFILENAME)
+            s = file_storage.FileStorage(SYMFILENAME)
             try:
                 s.get()
                 self.fail('Should have raised an exception.')
-            except file.CredentialsFileSymbolicLinkError:
+            except file_storage.CredentialsFileSymbolicLinkError:
                 pass
             finally:
                 os.unlink(SYMFILENAME)
@@ -106,7 +106,7 @@ class OAuth2ClientFileTests(unittest.TestCase):
 
         # Storage should be not be able to read that object, as the capability
         # to read and write credentials as pickled objects has been removed.
-        s = file.Storage(FILENAME)
+        s = file_storage.FileStorage(FILENAME)
         read_credentials = s.get()
         self.assertEquals(None, read_credentials)
 
@@ -124,7 +124,7 @@ class OAuth2ClientFileTests(unittest.TestCase):
                       datetime.timedelta(minutes=15))
         credentials = self.create_test_credentials(expiration=expiration)
 
-        s = file.Storage(FILENAME)
+        s = file_storage.FileStorage(FILENAME)
         s.put(credentials)
         credentials = s.get()
         new_cred = copy.copy(credentials)
@@ -147,7 +147,7 @@ class OAuth2ClientFileTests(unittest.TestCase):
                       datetime.timedelta(minutes=15))
         credentials = self.create_test_credentials(expiration=expiration)
 
-        s = file.Storage(FILENAME)
+        s = file_storage.FileStorage(FILENAME)
         s.put(credentials)
         credentials = s.get()
         new_cred = copy.copy(credentials)
@@ -176,7 +176,7 @@ class OAuth2ClientFileTests(unittest.TestCase):
                       datetime.timedelta(minutes=15))
         credentials = self.create_test_credentials(expiration=expiration)
 
-        s = file.Storage(FILENAME)
+        s = file_storage.FileStorage(FILENAME)
         s.put(credentials)
         credentials = s.get()
         new_cred = copy.copy(credentials)
@@ -191,7 +191,7 @@ class OAuth2ClientFileTests(unittest.TestCase):
                       datetime.timedelta(minutes=15))
         credentials = self.create_test_credentials(expiration=expiration)
 
-        s = file.Storage(FILENAME)
+        s = file_storage.FileStorage(FILENAME)
         s.put(credentials)
         credentials = s.get()
         new_cred = copy.copy(credentials)
@@ -221,7 +221,7 @@ class OAuth2ClientFileTests(unittest.TestCase):
     def test_credentials_delete(self):
         credentials = self.create_test_credentials()
 
-        s = file.Storage(FILENAME)
+        s = file_storage.FileStorage(FILENAME)
         s.put(credentials)
         credentials = s.get()
         self.assertNotEquals(None, credentials)
@@ -235,7 +235,7 @@ class OAuth2ClientFileTests(unittest.TestCase):
 
         credentials = AccessTokenCredentials(access_token, user_agent)
 
-        s = file.Storage(FILENAME)
+        s = file_storage.FileStorage(FILENAME)
         credentials = s.put(credentials)
         credentials = s.get()
 
@@ -261,7 +261,7 @@ class OAuth2ClientFileTests(unittest.TestCase):
 
         store.put(credentials)
         if os.name == 'posix':
-            self.assertTrue(store._multistore._read_only)
+            self.assertTrue(store._storage._multistore._read_only)
         os.chmod(FILENAME, 0o600)
 
     def test_multistore_no_symbolic_link_files(self):

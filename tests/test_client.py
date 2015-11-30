@@ -593,7 +593,7 @@ class GoogleCredentialsTests(unittest.TestCase):
 class DummyDeleteStorage(Storage):
     delete_called = False
 
-    def locked_delete(self):
+    def delete(self):
         self.delete_called = True
 
 

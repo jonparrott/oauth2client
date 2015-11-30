@@ -105,7 +105,7 @@ class FlowField(six.with_metaclass(models.SubfieldBase, models.Field)):
         return self.get_prep_value(value)
 
 
-class Storage(BaseStorage):
+class DjangoOrmStorage(BaseStorage):
     """Store and retrieve a single credential to and from the Django datastore.
 
     This Storage helper presumes the Credentials
@@ -129,7 +129,7 @@ class Storage(BaseStorage):
         self.key_value = key_value
         self.property_name = property_name
 
-    def locked_get(self):
+    def get(self):
         """Retrieve stored credential.
 
         Returns:
@@ -145,7 +145,7 @@ class Storage(BaseStorage):
                 credential.set_store(self)
         return credential
 
-    def locked_put(self, credentials, overwrite=False):
+    def put(self, credentials, overwrite=False):
         """Write a Credentials to the Django datastore.
 
         Args:
@@ -165,7 +165,7 @@ class Storage(BaseStorage):
         setattr(entity, self.property_name, credentials)
         entity.save()
 
-    def locked_delete(self):
+    def delete(self):
         """Delete Credentials from the datastore."""
 
         query = {self.key_name: self.key_value}

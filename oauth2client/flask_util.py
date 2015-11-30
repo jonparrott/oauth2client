@@ -557,7 +557,7 @@ class FlaskSessionStorage(Storage):
     implementation.
     """
 
-    def locked_get(self):
+    def get(self):
         serialized = session.get(_CREDENTIALS_KEY)
 
         if serialized is None:
@@ -568,9 +568,9 @@ class FlaskSessionStorage(Storage):
 
         return credentials
 
-    def locked_put(self, credentials):
+    def put(self, credentials):
         session[_CREDENTIALS_KEY] = credentials.to_json()
 
-    def locked_delete(self):
+    def delete(self):
         if _CREDENTIALS_KEY in session:
             del session[_CREDENTIALS_KEY]

@@ -28,7 +28,7 @@ from oauth2client.client import Storage as BaseStorage
 __author__ = 'jcgregorio@google.com (Joe Gregorio)'
 
 
-class Storage(BaseStorage):
+class KeyringStorage(BaseStorage):
     """Store and retrieve a single credential to and from the keyring.
 
     To use this module you must have the keyring module installed. See
@@ -61,24 +61,8 @@ class Storage(BaseStorage):
         """
         self._service_name = service_name
         self._user_name = user_name
-        self._lock = threading.Lock()
 
-    def acquire_lock(self):
-        """Acquires any lock necessary to access this Storage.
-
-        This lock is not reentrant.
-        """
-        self._lock.acquire()
-
-    def release_lock(self):
-        """Release the Storage lock.
-
-        Trying to release a lock that isn't held will result in a
-        RuntimeError.
-        """
-        self._lock.release()
-
-    def locked_get(self):
+    def get(self):
         """Retrieve Credential from file.
 
         Returns:
@@ -96,7 +80,7 @@ class Storage(BaseStorage):
 
         return credentials
 
-    def locked_put(self, credentials):
+    def put(self, credentials):
         """Write Credentials to file.
 
         Args:
@@ -105,7 +89,7 @@ class Storage(BaseStorage):
         keyring.set_password(self._service_name, self._user_name,
                              credentials.to_json())
 
-    def locked_delete(self):
+    def delete(self):
         """Delete Credentials file.
 
         Args:

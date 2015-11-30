@@ -19,6 +19,7 @@ Tools for interacting with OAuth 2.0 protected resources.
 
 import base64
 import collections
+import contextlib
 import copy
 import datetime
 import json
@@ -336,95 +337,38 @@ class Flow(object):
 class Storage(object):
     """Base class for all Storage objects.
 
-    Store and retrieve a single credential. This class supports locking
-    such that multiple processes and threads can operate on a single
-    store.
+    Store and retrieve a single credential.
     """
 
-    def acquire_lock(self):
-        """Acquires any lock necessary to access this Storage.
-
-        This lock is not reentrant.
-        """
-        pass
-
-    def release_lock(self):
-        """Release the Storage lock.
-
-        Trying to release a lock that isn't held will result in a
-        RuntimeError.
-        """
-        pass
-
-    def locked_get(self):
+    def get(self):
         """Retrieve credential.
-
-        The Storage lock must be held when this is called.
 
         Returns:
             oauth2client.client.Credentials
         """
         _abstract()
 
-    def locked_put(self, credentials):
+    def put(self, credentials):
         """Write a credential.
-
-        The Storage lock must be held when this is called.
 
         Args:
             credentials: Credentials, the credentials to store.
         """
         _abstract()
 
-    def locked_delete(self):
+    def delete(self):
         """Delete a credential.
 
         The Storage lock must be held when this is called.
         """
         _abstract()
 
-    def get(self):
-        """Retrieve credential.
-
-        The Storage lock must *not* be held when this is called.
-
-        Returns:
-            oauth2client.client.Credentials
-        """
-        self.acquire_lock()
-        try:
-            return self.locked_get()
-        finally:
-            self.release_lock()
-
-    def put(self, credentials):
-        """Write a credential.
-
-        The Storage lock must be held when this is called.
-
-        Args:
-            credentials: Credentials, the credentials to store.
-        """
-        self.acquire_lock()
-        try:
-            self.locked_put(credentials)
-        finally:
-            self.release_lock()
-
-    def delete(self):
-        """Delete credential.
-
-        Frees any resources associated with storing the credential.
-        The Storage lock must *not* be held when this is called.
-
-        Returns:
-            None
-        """
-        self.acquire_lock()
-        try:
-            return self.locked_delete()
-        finally:
-            self.release_lock()
+    def lock(self):
+        """TODO"""
+        @contextlib.contextmanager
+        def noop():
+            yield
+        return noop()
 
 
 def clean_headers(headers):
@@ -841,9 +785,8 @@ class OAuth2Credentials(Credentials):
         if not self.store:
             self._do_refresh_request(http_request)
         else:
-            self.store.acquire_lock()
-            try:
-                new_cred = self.store.locked_get()
+            with self.store.lock():
+                new_cred = self.store.get()
 
                 if (new_cred and not new_cred.invalid and
                         new_cred.access_token != self.access_token and
@@ -852,8 +795,6 @@ class OAuth2Credentials(Credentials):
                     self._updateFromCredential(new_cred)
                 else:
                     self._do_refresh_request(http_request)
-            finally:
-                self.store.release_lock()
 
     def _do_refresh_request(self, http_request):
         """Refresh the access_token using the refresh_token.
@@ -887,7 +828,7 @@ class OAuth2Credentials(Credentials):
             # re-authorize, so we unflag here.
             self.invalid = False
             if self.store:
-                self.store.locked_put(self)
+                self.store.put(self)
         else:
             # An {'error':...} response body means the token is expired or
             # revoked, so we flag the credentials as such.
@@ -901,7 +842,7 @@ class OAuth2Credentials(Credentials):
                         error_msg += ': ' + d['error_description']
                     self.invalid = True
                     if self.store:
-                        self.store.locked_put(self)
+                        self.store.put(self)
             except (TypeError, ValueError):
                 pass
             raise HttpAccessTokenRefreshError(error_msg, status=resp.status)
