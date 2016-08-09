@@ -28,5 +28,5 @@ if [[ "${TOX_ENV}" == "pypy" ]]; then
     if [ ! -d "${HOME}/.pyenv" ]; then
         git clone https://github.com/yyuu/pyenv.git ${HOME}/.pyenv
     fi
-    ${HOME}/.pyenv/bin/pyenv install pypy-2.6.0
+    ${HOME}/.pyenv/bin/pyenv install --skip-existing pypy-2.6.0
 fi
